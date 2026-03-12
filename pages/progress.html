@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0a0a0a">
+<title>ผลการฝึก — Tactical Fitness</title>
+<link rel="stylesheet" href="../css/base.css">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+:root { --font-body:'Sarabun',sans-serif; --font-mono:'IBM Plex Mono',monospace; }
+body { font-family: var(--font-body); }
+
+/* ── PR GRID ── */
+.pr-grid { display:grid; grid-template-columns:1fr 1fr; gap:var(--gap-sm); margin-bottom:var(--gap); }
+.pr-box {
+  background:var(--bg2); border:1px solid var(--border);
+  border-radius:var(--radius); padding:16px; text-align:center;
+  text-decoration:none; transition:border-color .15s;
+}
+.pr-box:active { border-color:var(--green-mid); transform:scale(.97); }
+.pr-box-label { font-family:var(--font-mono); font-size:11px; color:var(--gray2); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:6px; }
+.pr-box-val   { font-size:var(--text-2xl); font-weight:700; line-height:1; }
+.pr-box-unit  { font-family:var(--font-mono); font-size:11px; color:var(--gray); margin-top:4px; }
+.pr-box-date  { font-size:var(--text-xs); color:var(--gray2); margin-top:4px; }
+
+/* ── SESSION LOG ── */
+.log-item {
+  background:var(--bg2); border:1px solid var(--border);
+  border-radius:var(--radius); padding:16px;
+  margin-bottom:var(--gap-sm); cursor:pointer;
+  transition:border-color .15s;
+}
+.log-item:active { border-color:var(--green-mid); }
+.log-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+.log-date   { font-size:var(--text-base); font-weight:700; }
+.log-badge  { font-family:var(--font-mono); font-size:11px; }
+.log-meta   { display:flex; gap:var(--gap-sm); }
+.log-meta-item { font-size:var(--text-sm); color:var(--gray); }
+
+/* ── HEATMAP ── */
+.heatmap { display:flex; flex-wrap:wrap; gap:3px; margin-bottom:var(--gap); }
+.hm-cell {
+  width:14px; height:14px; border-radius:2px;
+  background:var(--border2); transition:background .2s;
+}
+.hm-cell.d1 { background:rgba(0,230,118,.25); }
+.hm-cell.d2 { background:rgba(0,230,118,.5); }
+.hm-cell.d3 { background:rgba(0,230,118,.75); }
+.hm-cell.d4 { background:var(--green); }
+
+/* ── STATS ROW ── */
+.stats-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:var(--gap-sm); margin-bottom:var(--gap); }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="risk-bar" id="risk-bar"></div>
+  <header class="topbar">
+    <div>
+      <div class="topbar-logo">📈 ผลการฝึก</div>
+      <div class="topbar-sub" id="tb-sub">สถิติทั้งหมด</div>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-clock" id="tb-clock">—:—</div>
+      <div class="live-dot"></div>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- Tabs -->
+    <div class="tab-bar anim-1">
+      <div class="tab-item active" onclick="switchTab('pr')">สถิติ PR</div>
+      <div class="tab-item" onclick="switchTab('log')">ประวัติ</div>
+      <div class="tab-item" onclick="switchTab('intel')">วิเคราะห์</div>
+    </div>
+
+    <!-- Tab: PR -->
+    <div id="tab-pr">
+      <div class="sec-h anim-1">สถิติส่วนตัว (Personal Records)</div>
+      <div class="pr-grid anim-2" id="pr-grid">
+        <div class="empty-state"><div class="empty-state-text">กำลังโหลด...</div></div>
+      </div>
+
+      <div class="sec-h anim-3">เดือนนี้</div>
+      <div class="stats-3 anim-3">
+        <div class="stat-box card-accent-top green">
+          <div class="stat-val text-green" id="mo-sessions">—</div>
+          <div class="stat-label">ครั้ง</div>
+        </div>
+        <div class="stat-box card-accent-top amber">
+          <div class="stat-val text-amber" id="mo-mins">—</div>
+          <div class="stat-label">นาทีรวม</div>
+        </div>
+        <div class="stat-box card-accent-top blue">
+          <div class="stat-val" id="mo-reps">—</div>
+          <div class="stat-label">reps รวม</div>
+        </div>
+      </div>
+
+      <div class="sec-h anim-4">กิจกรรม 12 สัปดาห์ที่ผ่านมา</div>
+      <div class="heatmap anim-4" id="heatmap"></div>
+
+      <div class="sec-h anim-5" style="margin-top:var(--gap)">ส่งออกข้อมูล</div>
+      <div class="anim-5" style="display:flex;gap:var(--gap-sm);flex-wrap:wrap">
+        <button class="btn btn-secondary btn-sm" onclick="generateCard()">🎖 สร้างการ์ด</button>
+        <button class="btn btn-secondary btn-sm" onclick="generateReport()">📋 สร้างรายงาน</button>
+        <button class="btn btn-secondary btn-sm" onclick="printReport()">🖨 พิมพ์</button>
+      </div>
+    </div>
+
+    <!-- Tab: Log -->
+    <div id="tab-log" class="hidden">
+      <div class="sec-h">ประวัติเซสชัน</div>
+      <div id="log-list">
+        <div class="empty-state"><div class="empty-state-icon">📋</div><div class="empty-state-text">กำลังโหลด...</div></div>
+      </div>
+    </div>
+
+    <!-- Tab: Intel (รวม intel-center) -->
+    <div id="tab-intel" class="hidden">
+      <div class="sec-h">วิเคราะห์ความก้าวหน้า</div>
+      <div class="card anim-1" style="margin-bottom:var(--gap)">
+        <div style="font-size:var(--text-base);font-weight:700;margin-bottom:8px">เซสชันถัดไป — เป้าหมาย</div>
+        <div id="next-target" class="text-gray text-sm">กำลังคำนวณ...</div>
+      </div>
+      <div class="card anim-2" style="margin-bottom:var(--gap)">
+        <div style="font-size:var(--text-base);font-weight:700;margin-bottom:8px">รายงานสัปดาห์นี้ (AAR)</div>
+        <div id="aar-content" class="text-gray text-sm">กำลังสร้าง...</div>
+      </div>
+      <div class="card anim-3">
+        <div style="font-size:var(--text-base);font-weight:700;margin-bottom:8px">ประวัติอาการบาดเจ็บ</div>
+        <div id="injury-list" class="text-gray text-sm">กำลังโหลด...</div>
+        <button class="btn btn-secondary btn-sm btn-full" style="margin-top:12px" onclick="openInjuryLog()">🚨 บันทึกอาการบาดเจ็บ / ปวด</button>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+
+  <nav class="bottom-nav">
+    <div class="bnav-inner">
+      <a href="dashboard.html" class="bnav-item"><div class="bnav-icon">🏠</div><div class="bnav-label">หน้าหลัก</div></a>
+      <a href="training.html"  class="bnav-item"><div class="bnav-icon">⚡</div><div class="bnav-label">ฝึก</div></a>
+      <a href="progress.html"  class="bnav-item active"><div class="bnav-icon">📈</div><div class="bnav-label">ผล</div></a>
+      <a href="goals.html"     class="bnav-item"><div class="bnav-icon">🎖</div><div class="bnav-label">เป้าหมาย</div></a>
+      <a href="profile.html"   class="bnav-item"><div class="bnav-icon">👤</div><div class="bnav-label">ฉัน</div></a>
+    </div>
+  </nav>
+</div>
+
+<div class="toast-container" id="toasts"></div>
+
+<!-- Injury Modal -->
+<div class="overlay" id="injury-overlay" onclick="closeInjuryLog()"></div>
+<div class="modal" id="injury-modal">
+  <div class="modal-handle"></div>
+  <div class="modal-title">🚨 บันทึกอาการบาดเจ็บ</div>
+  <div class="field-group">
+    <label class="field-label">ระดับความเจ็บปวด</label>
+    <select class="field-select" id="inj-severity">
+      <option value="1">1 — เจ็บเล็กน้อย</option>
+      <option value="2">2 — เจ็บปานกลาง</option>
+      <option value="3">3 — เจ็บมาก</option>
+      <option value="4">4 — เจ็บรุนแรงมาก</option>
+      <option value="5">5 — ไม่สามารถฝึกได้</option>
+    </select>
+  </div>
+  <div class="field-group">
+    <label class="field-label">ตำแหน่งที่บาดเจ็บ</label>
+    <select class="field-select" id="inj-location">
+      <option value="">-- เลือกตำแหน่ง --</option>
+      <option value="ไหล่">ไหล่</option>
+      <option value="เข่า">เข่า</option>
+      <option value="หลังล่าง">หลังล่าง</option>
+      <option value="ข้อศอก">ข้อศอก</option>
+      <option value="ข้อมือ">ข้อมือ</option>
+      <option value="ข้อเท้า">ข้อเท้า</option>
+      <option value="อื่นๆ">อื่นๆ</option>
+    </select>
+  </div>
+  <div class="field-group">
+    <label class="field-label">หมายเหตุ (ไม่บังคับ)</label>
+    <textarea class="field-textarea" id="inj-note" placeholder="อธิบายอาการ..."></textarea>
+  </div>
+  <button class="btn btn-primary btn-full" onclick="saveInjury()">💾 บันทึก</button>
+</div>
+
+<script src="../js/i18n.js"></script>
+<script src="../js/core.js"></script>
+<script src="../js/engines-common.js"></script>
+<script>
+'use strict';
+
+let _activeTab = 'pr';
+
+function switchTab(t) {
+  _activeTab = t;
+  document.querySelectorAll('.tab-item').forEach((el,i) => {
+    el.classList.toggle('active', ['pr','log','intel'][i] === t);
+  });
+  document.getElementById('tab-pr').classList.toggle('hidden', t !== 'pr');
+  document.getElementById('tab-log').classList.toggle('hidden', t !== 'log');
+  document.getElementById('tab-intel').classList.toggle('hidden', t !== 'intel');
+  if (t === 'log' && !_logLoaded) loadLog();
+  if (t === 'intel' && !_intelLoaded) loadIntel();
+}
+
+let _logLoaded = false, _intelLoaded = false;
+
+function fmtDate(ds) {
+  if (!ds) return '—';
+  const d = new Date(ds);
+  return `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()+543}`;
+}
+
+function renderPR(pr) {
+  const grid = document.getElementById('pr-grid');
+  if (!pr) { grid.innerHTML = '<div class="empty-state"><div class="empty-state-text">ยังไม่มี PR<br>เริ่มฝึกเพื่อบันทึกสถิติ</div></div>'; return; }
+  const items = [
+    { label:'วิดพื้น', val:pr.pushup?.value, unit:'ครั้ง', date:pr.pushup?.date },
+    { label:'ดึงข้อ',  val:pr.pullup?.value, unit:'ครั้ง', date:pr.pullup?.date },
+    { label:'แพลงก์',  val:pr.plank?.value,  unit:'วินาที',date:pr.plank?.date  },
+    { label:'ซิทอัพ',  val:pr.situp?.value,  unit:'ครั้ง', date:pr.situp?.date  },
+    { label:'วิ่ง 2km', val:pr.run2km?.value, unit:'นาที', date:pr.run2km?.date, fmt:true },
+    { label:'วิ่ง 5km', val:pr.run5km?.value, unit:'นาที', date:pr.run5km?.date, fmt:true },
+  ];
+  const fmtRun = s => s ? `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}` : '—';
+  grid.innerHTML = items.map(it => {
+    const v = it.fmt ? fmtRun(it.val) : (it.val||'—');
+    const color = it.val ? 'text-green' : 'text-gray';
+    return `<div class="pr-box">
+      <div class="pr-box-label">${it.label}</div>
+      <div class="pr-box-val ${color}">${v}</div>
+      <div class="pr-box-unit">${it.unit}</div>
+      ${it.date ? `<div class="pr-box-date">${fmtDate(it.date)}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function renderHeatmap(logs) {
+  const hm = document.getElementById('heatmap');
+  if (!hm) return;
+  const trained = new Set(logs.map(l => l.date));
+  const today = new Date();
+  const cells = [];
+  for (let i = 83; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    const ds = d.toISOString().split('T')[0];
+    const count = logs.filter(l => l.date === ds).length;
+    const cls = count >= 3 ? 'd4' : count === 2 ? 'd3' : count === 1 ? 'd2' : trained.has(ds) ? 'd1' : '';
+    cells.push(`<div class="hm-cell ${cls}" title="${ds}"></div>`);
+  }
+  hm.innerHTML = cells.join('');
+}
+
+async function loadLog() {
+  _logLoaded = true;
+  const logs = await Storage.Logs.getAll();
+  const list = document.getElementById('log-list');
+  if (!logs?.length) {
+    list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📋</div><div class="empty-state-text">ยังไม่มีประวัติการฝึก</div></div>';
+    return;
+  }
+  const sorted = [...logs].sort((a,b) => b.date.localeCompare(a.date)).slice(0,50);
+  list.innerHTML = sorted.map(log => {
+    const exCount = log.exercises?.length || 0;
+    const totalReps = (log.exercises||[]).reduce((s,ex) => s + (ex.sets||[]).reduce((ss,st) => ss + (st.reps||0), 0), 0);
+    const badge = log.completionPct >= 100
+      ? '<span class="badge badge-green">✓ เสร็จ</span>'
+      : `<span class="badge badge-amber">${log.completionPct||0}%</span>`;
+    return `<div class="log-item">
+      <div class="log-header">
+        <div class="log-date">${fmtDate(log.date)}</div>
+        ${badge}
+      </div>
+      <div class="log-meta">
+        <div class="log-meta-item">⚡ ${exCount} ท่าฝึก</div>
+        <div class="log-meta-item">🔢 ${totalReps} reps</div>
+        ${log.duration ? `<div class="log-meta-item">⏱ ${log.duration} นาที</div>` : ''}
+      </div>
+      ${log.notes ? `<div style="font-size:var(--text-sm);color:var(--gray);margin-top:8px">${log.notes}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+async function loadIntel() {
+  _intelLoaded = true;
+  try {
+    const [pr, logs] = await Promise.all([Storage.PR.get(), Storage.Logs.getAll()]);
+    const nextEl = document.getElementById('next-target');
+    if (nextEl) {
+      if (typeof ProgressionEngine !== 'undefined' && pr) {
+        const next = ProgressionEngine.getNextSessionTargets(pr, logs);
+        nextEl.innerHTML = next ? Object.entries(next).map(([k,v]) =>
+          `<div style="padding:4px 0;border-bottom:1px solid var(--border)">${k}: <strong style="color:var(--white)">${v}</strong></div>`
+        ).join('') : 'ยังไม่มีข้อมูลเพียงพอ';
+      } else nextEl.textContent = 'ต้องการข้อมูลอย่างน้อย 3 session';
+    }
+
+    // AAR
+    const aarEl = document.getElementById('aar-content');
+    if (aarEl && logs?.length) {
+      const week = new Date(); week.setDate(week.getDate()-6);
+      const weekStr = week.toISOString().split('T')[0];
+      const wLogs = logs.filter(l => l.date >= weekStr);
+      const totalMins = wLogs.reduce((s,l) => s+(l.duration||0),0);
+      const totalReps = wLogs.reduce((s,l) => s+(l.exercises||[]).reduce((ss,ex)=>ss+(ex.sets||[]).reduce((sss,st)=>sss+(st.reps||0),0),0),0);
+      aarEl.innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+          <div class="stat-box"><div class="stat-val text-green">${wLogs.length}</div><div class="stat-label">sessions</div></div>
+          <div class="stat-box"><div class="stat-val">${totalMins}</div><div class="stat-label">นาที</div></div>
+        </div>
+        <div class="text-gray text-sm">${wLogs.length >= 3 ? '✅ ดีมาก — ฝึก 3+ วัน/สัปดาห์' : wLogs.length >= 2 ? '⚡ ฝึกได้ดี — เพิ่มได้อีก' : '⚠️ ฝึกน้อยกว่าแผน'}</div>
+      `;
+    } else if (aarEl) aarEl.textContent = 'ยังไม่มีข้อมูลสัปดาห์นี้';
+
+    // Injuries
+    const injEl = document.getElementById('injury-list');
+    try {
+      const prefs = JSON.parse(localStorage.getItem('tf_prefs')||'{}');
+      const injuries = JSON.parse(localStorage.getItem('tf_injuries')||'[]');
+      if (injEl) {
+        if (!injuries.length) { injEl.textContent = '✅ ไม่มีอาการบาดเจ็บที่บันทึกไว้'; }
+        else {
+          injEl.innerHTML = injuries.slice(-5).reverse().map(inj =>
+            `<div style="padding:8px 0;border-bottom:1px solid var(--border)">
+              <span style="font-weight:600">${inj.location}</span>
+              <span class="badge badge-${inj.severity>=3?'red':'amber'}" style="margin-left:6px">ระดับ ${inj.severity}</span>
+              <div class="text-gray text-xs">${inj.date}</div>
+            </div>`
+          ).join('');
+        }
+      }
+    } catch(e) { if(injEl) injEl.textContent = 'ไม่มีข้อมูล'; }
+  } catch(err) { console.error(err); }
+}
+
+function openInjuryLog() {
+  document.getElementById('injury-overlay').classList.add('show');
+  document.getElementById('injury-modal').classList.add('show');
+}
+function closeInjuryLog() {
+  document.getElementById('injury-overlay').classList.remove('show');
+  document.getElementById('injury-modal').classList.remove('show');
+}
+
+function saveInjury() {
+  const sev = document.getElementById('inj-severity').value;
+  const loc = document.getElementById('inj-location').value;
+  const note = document.getElementById('inj-note').value;
+  if (!loc) { alert('กรุณาเลือกตำแหน่ง'); return; }
+  const injuries = JSON.parse(localStorage.getItem('tf_injuries')||'[]');
+  injuries.push({ severity:+sev, location:loc, note, date:new Date().toLocaleDateString('th-TH') });
+  localStorage.setItem('tf_injuries', JSON.stringify(injuries));
+  closeInjuryLog();
+  showToast('บันทึกอาการบาดเจ็บแล้ว', 'green');
+  if (_intelLoaded) { _intelLoaded=false; loadIntel(); }
+}
+
+function generateCard()   { window.location.href='performance.html'; }
+function generateReport() { window.location.href='performance.html'; }
+function printReport()    { window.location.href='performance.html'; }
+
+function showToast(msg, type='') {
+  const c = document.getElementById('toasts');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+function startClock() {
+  const el = document.getElementById('tb-clock');
+  const tick = () => { if(el) el.textContent = new Date().toTimeString().slice(0,5); };
+  tick(); setInterval(tick, 30000);
+}
+
+(async () => {
+  startClock();
+  try {
+    await Storage.init();
+    const [profile, pr, allLogs] = await Promise.all([
+      Storage.User.get(), Storage.PR.get(), Storage.Logs.getAll()
+    ]);
+    if (!profile?.onboardingComplete) { window.location.href='onboarding.html'; return; }
+
+    renderPR(pr);
+    renderHeatmap(allLogs||[]);
+
+    // Month stats
+    const now = new Date();
+    const monthStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    const monthLogs = (allLogs||[]).filter(l => l.date?.startsWith(monthStr));
+    const moMins = monthLogs.reduce((s,l) => s+(l.duration||0), 0);
+    const moReps = monthLogs.reduce((s,l) => s+(l.exercises||[]).reduce((ss,ex)=>ss+(ex.sets||[]).reduce((sss,st)=>sss+(st.reps||0),0),0),0);
+    const _set = (id,v) => { const e=document.getElementById(id); if(e) e.textContent=v; };
+    _set('mo-sessions', monthLogs.length);
+    _set('mo-mins', moMins);
+    _set('mo-reps', moReps.toLocaleString());
+
+    const sub = document.getElementById('tb-sub');
+    if (sub) sub.textContent = `ฝึกไปแล้ว ${(allLogs||[]).length} ครั้ง`;
+
+  } catch(err) { console.error(err); }
+})();
+</script>
+</body>
+</html>

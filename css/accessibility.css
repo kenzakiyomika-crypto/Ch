@@ -1,0 +1,658 @@
+/* ═══════════════════════════════════════════════════════════
+   TACTICAL FITNESS — ACCESSIBILITY LAYER v1.0
+   ระยะ 1: Typography · Contrast · Touch targets
+   ระยะ 2: Navigation simplification + "More" sheet
+   ═══════════════════════════════════════════════════════════
+   Design targets:
+   - WCAG AA contrast (≥4.5:1 for text, ≥3:1 for UI)
+   - Minimum 44×44px touch targets (Apple HIG / Google Material)
+   - Minimum 12px for any visible text, 14px for functional labels
+   - Clear visual hierarchy for all ages
+═══════════════════════════════════════════════════════════ */
+
+/* ───────────────────────────────────────────────────────────
+   PHASE 1-A — COLOR SYSTEM FIX
+   --gray2 (#444 on #080808 = 2.7:1 → FAIL)
+   Fix: raise to #777 = 5.3:1 → PASS AA
+   --gray  (#888 on #080808 = 5.7:1 → PASS, keep)
+   ─────────────────────────────────────────────────────────── */
+:root {
+  /* Contrast-safe grays */
+  --gray2:       #777777;   /* was #444444 — raised for AA compliance */
+  --gray3:       #555555;   /* was #2a2a2a — raised for use as muted text */
+
+  /* Slightly warmer white for reduced eye strain */
+  --white:       #efefef;
+
+  /* Minimum font size tokens */
+  --fs-min:      12px;   /* absolute floor — badge, meta labels */
+  --fs-label:    13px;   /* nav labels, section headers */
+  --fs-body:     15px;   /* body copy */
+  --fs-btn:      13px;   /* button text */
+  --fs-input:    16px;   /* inputs — iOS no-zoom */
+
+  /* Touch target minimums */
+  --tap-min:     44px;
+  --tap-comfortable: 48px;
+}
+
+/* ───────────────────────────────────────────────────────────
+   PHASE 1-B — TYPOGRAPHY FLOOR
+   All sizes below 12px are raised. This overrides inline
+   styles and per-page styles without touching each file.
+   ─────────────────────────────────────────────────────────── */
+
+/* Section headers: "// ระบบ", "// PR ส่วนตัว" etc. */
+.section-h,
+.section-title,
+.nav-label,
+.ob-step-label,
+[class*="section-label"],
+[class*="section-header"] {
+  font-size: var(--fs-label) !important;
+  color: var(--gray2) !important;
+  letter-spacing: 2px !important;
+}
+
+/* Card labels, chip labels, bstat labels, pr-chip-label */
+.bstat-label,
+.pr-chip-label,
+.card-label,
+.wday-name,
+.form-label,
+.settings-label,
+.settings-sub,
+[class*="-label"]:not(.bnav-label):not(.nav-label):not(.hero-btn-label) {
+  font-size: var(--fs-min) !important;
+  color: var(--gray) !important;
+}
+
+/* Small monospace details: chip units, sub-text, hints */
+.pr-chip-unit,
+.pr-chip-trend,
+.bstat-sub,
+.readiness-detail,
+.form-hint,
+.mission-desc-text,
+.mission-pct-text,
+.topbar-callsign,
+.sidebar-logo-sub,
+.rank-badge,
+.xp-nums {
+  font-size: var(--fs-min) !important;
+  color: var(--gray) !important;
+}
+
+/* Hero button sub-labels */
+.hero-btn-sub,
+.hero-btn-label,
+.focus-sub,
+.mode-desc,
+.bnav-label {
+  font-size: var(--fs-min) !important;
+}
+
+/* Bottom nav labels — readable at a glance */
+.bnav-label {
+  font-size: 11px !important;
+  letter-spacing: 0.5px !important;
+}
+
+/* Sidebar nav items — important for wayfinding */
+.nav-item {
+  font-size: 14px !important;
+  min-height: var(--tap-min) !important;
+  padding: 10px 10px !important;
+}
+
+/* ───────────────────────────────────────────────────────────
+   PHASE 1-C — TOUCH TARGET ENFORCEMENT
+   Every tappable element must be ≥44×44px
+   ─────────────────────────────────────────────────────────── */
+
+/* Buttons — global floor */
+button,
+.btn,
+[role="button"] {
+  min-height: var(--tap-min) !important;
+}
+
+/* Small spinner buttons (reps +/−) — these are tiny by design */
+/* Give them larger invisible hit area via padding */
+.spin-btn,
+.interval-reps-btn {
+  min-width:  var(--tap-min) !important;
+  min-height: var(--tap-min) !important;
+  font-size: 20px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* RPE buttons (6–10) */
+.rpe-btn {
+  min-width:  var(--tap-min) !important;
+  min-height: var(--tap-min) !important;
+  font-size: 16px !important;
+}
+
+/* Set-done buttons in training */
+.set-done-btn {
+  min-height: var(--tap-min) !important;
+  font-size: 13px !important;
+  padding: 10px 16px !important;
+}
+
+/* Day toggles in planner */
+.day-toggle {
+  min-height: var(--tap-min) !important;
+  font-size: 13px !important;
+}
+
+/* Calendar cells — min tap height */
+.cal-cell {
+  min-height: 56px !important;
+}
+
+/* Week day cells in dashboard */
+.wday {
+  min-height: 56px !important;
+  padding: 8px 4px !important;
+}
+
+/* Tab buttons */
+.tab-btn {
+  min-height: var(--tap-min) !important;
+  font-size: 13px !important;
+  padding: 10px 14px !important;
+}
+
+/* Toggle inputs — make label bigger */
+.toggle {
+  min-height: var(--tap-min) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+/* Select/input — already 44px from base, reinforce */
+select,
+input[type="text"],
+input[type="number"],
+input[type="email"],
+textarea,
+.field-select,
+.field-input {
+  min-height: var(--tap-min) !important;
+  font-size: var(--fs-input) !important;
+  padding: 10px 14px !important;
+}
+
+/* ───────────────────────────────────────────────────────────
+   PHASE 1-D — HERO BUTTONS & PRIMARY ACTIONS
+   Make the main CTA unmissable
+   ─────────────────────────────────────────────────────────── */
+
+/* Hero 3-button row */
+.hero-btn {
+  min-height: 80px !important;
+  padding: 16px 10px !important;
+}
+
+.hero-btn-label {
+  font-size: 14px !important;
+  letter-spacing: 2px !important;
+}
+
+.hero-btn-sub {
+  font-size: 12px !important;
+}
+
+/* START SESSION / SAVE SESSION — most important buttons */
+.btn-primary.btn-full {
+  min-height: 54px !important;
+  font-size: 15px !important;
+  letter-spacing: 3px !important;
+}
+
+/* ───────────────────────────────────────────────────────────
+   PHASE 1-E — FOCUS VISIBILITY
+   Keyboard / switch-access users need clear focus rings
+   ─────────────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--green) !important;
+  outline-offset: 2px !important;
+}
+
+button:focus-visible,
+a:focus-visible,
+select:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--green) !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 4px rgba(0,255,136,0.15) !important;
+}
+
+/* ───────────────────────────────────────────────────────────
+   PHASE 1-F — READINESS & PR VALUES
+   Big numbers should stay big, make sure they don't shrink
+   ─────────────────────────────────────────────────────────── */
+.ring-score   { font-size: 28px !important; }
+.bstat-val    { font-size: 26px !important; }
+.pr-chip-val  { font-size: 22px !important; }
+.readiness-status { font-size: 18px !important; }
+.xp-rank-label    { font-size: 15px !important; }
+
+
+/* ═══════════════════════════════════════════════════════════
+   PHASE 2 — NAVIGATION SIMPLIFICATION
+   Bottom Nav: 5 items → Home, Train, Planner, Progress, More
+   "More" opens a bottom sheet with all remaining pages
+   Sidebar: still used on desktop (≥1024px)
+   ═══════════════════════════════════════════════════════════ */
+
+/* ───────────────────────────────────────────────────────────
+   2-A — Bottom Nav redesign
+   Bigger icons, bigger labels, more breathing room
+   ─────────────────────────────────────────────────────────── */
+.bottom-nav {
+  display: none;
+}
+
+@media (max-width: 1023px) {
+  .bottom-nav {
+    display: block !important;
+    border-top: 1px solid var(--border);
+  }
+
+  .bnav-inner {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    height: calc(var(--tap-comfortable) + env(safe-area-inset-bottom, 0px));
+    align-items: stretch;
+  }
+
+  .bnav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 4px;
+    text-decoration: none;
+    color: var(--gray2);
+    transition: color .15s;
+    min-height: var(--tap-min);
+    gap: 3px;
+  }
+
+  .bnav-item.active { color: var(--green); }
+  .bnav-item:active { color: var(--green); }
+
+  .bnav-icon {
+    font-size: 22px;
+    line-height: 1;
+  }
+
+  .bnav-label {
+    font-size: 11px !important;
+    letter-spacing: 0.3px !important;
+    font-family: var(--body) !important;
+    font-weight: 500;
+    margin-top: 2px;
+  }
+
+  /* Active indicator — green dot above active item */
+  .bnav-item.active::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    width: 20px;
+    height: 2px;
+    background: var(--green);
+    border-radius: 0 0 2px 2px;
+    box-shadow: 0 0 8px var(--green);
+  }
+
+  .bnav-item {
+    position: relative;
+  }
+}
+
+/* ───────────────────────────────────────────────────────────
+   2-B — "More" bottom sheet
+   Triggered by the 5th nav item (More / เพิ่มเติม)
+   Contains all pages not in the main 4 items
+   ─────────────────────────────────────────────────────────── */
+#more-sheet {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 600;
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  border-radius: 20px 20px 0 0;
+  padding: 0 16px calc(max(20px, env(safe-area-inset-bottom, 20px)) + 4px);
+  transform: translateY(100%);
+  transition: transform .35s var(--ease-out);
+  max-height: 75dvh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+#more-sheet.open {
+  transform: translateY(0);
+  box-shadow: 0 -12px 48px rgba(0,0,0,.9);
+}
+
+#more-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 599;
+  background: rgba(0,0,0,.55);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .3s ease;
+  backdrop-filter: blur(4px);
+}
+
+#more-sheet-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.more-handle {
+  width: 40px; height: 4px;
+  background: var(--border2);
+  border-radius: 2px;
+  margin: 14px auto 4px;
+}
+
+.more-sheet-title {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: var(--gray2);
+  text-align: center;
+  padding: 8px 0 16px;
+}
+
+/* Grid of page links inside More sheet */
+.more-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding-bottom: 8px;
+}
+
+.more-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  text-decoration: none;
+  color: var(--white);
+  transition: all .15s;
+  min-height: var(--tap-comfortable);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.more-item:active,
+.more-item:hover {
+  border-color: rgba(0,255,136,.3);
+  background: var(--green-dim);
+  color: var(--green);
+}
+
+.more-item-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+  width: 28px;
+  text-align: center;
+}
+
+.more-item-text {
+  flex: 1;
+}
+
+.more-item-name {
+  font-family: var(--body);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.more-item-desc {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--gray);
+  margin-top: 2px;
+  line-height: 1.3;
+}
+
+/* Section divider inside More sheet */
+.more-section-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--gray2);
+  letter-spacing: 2px;
+  padding: 12px 4px 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.more-section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ───────────────────────────────────────────────────────────
+   2-C — Content padding adjustment
+   When bottom nav is visible, pad content away from nav
+   ─────────────────────────────────────────────────────────── */
+@media (max-width: 1023px) {
+  .content, .main, .page-content, main {
+    padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+}
+
+/* ───────────────────────────────────────────────────────────
+   2-D — Desktop: sidebar always visible, bottom nav hidden
+   ─────────────────────────────────────────────────────────── */
+@media (min-width: 1024px) {
+  .bottom-nav  { display: none !important; }
+  #more-sheet, #more-sheet-overlay { display: none !important; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PHASE 2-E — SETTINGS PAGE: Progressive disclosure
+   Show "Basic" settings by default, hide advanced behind toggle
+   ═══════════════════════════════════════════════════════════ */
+.settings-advanced-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px;
+  margin: 8px 0;
+  cursor: pointer;
+  color: var(--gray);
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 2px;
+  border: 1px dashed var(--border2);
+  border-radius: 6px;
+  min-height: var(--tap-min);
+  transition: all .15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.settings-advanced-toggle:hover,
+.settings-advanced-toggle:active {
+  border-color: rgba(0,255,136,.3);
+  color: var(--green);
+}
+
+.settings-advanced-toggle .toggle-arrow {
+  transition: transform .25s var(--ease-out);
+}
+
+.settings-advanced-toggle.expanded .toggle-arrow {
+  transform: rotate(180deg);
+}
+
+.settings-advanced-section {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height .4s var(--ease-out), opacity .3s ease;
+  opacity: 0;
+}
+
+.settings-advanced-section.expanded {
+  max-height: 2000px;
+  opacity: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MISC QUALITY-OF-LIFE IMPROVEMENTS
+   ═══════════════════════════════════════════════════════════ */
+
+/* Slightly more line height for Thai text readability */
+body {
+  line-height: 1.6;
+}
+
+/* Make toast messages readable */
+.toast {
+  font-size: 13px !important;
+  padding: 12px 24px !important;
+  min-height: var(--tap-min) !important;
+}
+
+/* Alert text */
+.alert {
+  font-size: 13px !important;
+  line-height: 1.6 !important;
+}
+
+/* Mission card text — readable body */
+.mission-name-text {
+  font-size: 15px !important;
+  font-weight: 600 !important;
+}
+
+.mission-desc-text {
+  font-size: 12px !important;
+  line-height: 1.5 !important;
+}
+
+/* Section-h (dashboard style) */
+.section-h {
+  font-size: 12px !important;
+  letter-spacing: 2.5px !important;
+  color: var(--gray2) !important;
+}
+
+/* Streak chip */
+.streak-chip {
+  font-size: 12px !important;
+}
+
+/* Rank badge */
+.rank-badge {
+  font-size: 12px !important;
+  padding: 4px 10px !important;
+}
+
+/* PR chip hover — bigger hit area */
+.pr-chip {
+  padding: 12px 16px !important;
+  min-width: 90px !important;
+}
+
+/* Mode cards in training */
+.mode-card {
+  padding: 14px 12px !important;
+  min-height: 70px !important;
+}
+
+.mode-name {
+  font-size: 14px !important;
+}
+
+.mode-desc {
+  font-size: 11px !important;
+  line-height: 1.4 !important;
+  margin-top: 4px !important;
+}
+
+/* Training focus buttons */
+.focus-btn {
+  min-height: 64px !important;
+  padding: 12px 8px !important;
+}
+
+.focus-label {
+  font-size: 13px !important;
+  letter-spacing: 1.5px !important;
+}
+
+/* Planner calendar — day labels */
+.cal-day-name {
+  font-size: 12px !important;
+}
+
+/* Planner day type labels */
+.day-type-label {
+  font-size: 12px !important;
+}
+
+/* Settings rows */
+.settings-row {
+  min-height: 52px !important;
+  align-items: center !important;
+}
+
+.settings-label {
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: var(--white) !important;
+}
+
+.settings-sub {
+  font-size: 12px !important;
+  color: var(--gray) !important;
+  line-height: 1.4 !important;
+}
+
+/* Onboarding cards — bigger option buttons */
+.ob-option,
+.ob-choice,
+[class*="ob-btn"],
+.path-card,
+.goal-card {
+  min-height: 54px !important;
+  padding: 14px 16px !important;
+  font-size: 14px !important;
+}
+
+/* SFX test buttons in OPS hub */
+.sfx-btn {
+  min-height: 64px !important;
+  padding: 10px !important;
+}
+
+.sfx-btn-label {
+  font-size: 11px !important;
+}
+
+/* Drill buttons */
+.drill-btn {
+  min-height: var(--tap-min) !important;
+  font-size: 14px !important;
+  padding: 10px 12px !important;
+}
